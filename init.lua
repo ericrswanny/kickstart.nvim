@@ -176,6 +176,11 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
+-- Split window vertically
+vim.keymap.set('n', '<leader>wv', ':vsplit<CR>', { desc = 'Split window vertically', silent = true })
+-- Split window horizontally ("s" for split)
+vim.keymap.set('n', '<leader>ws', ':split<CR>', { desc = 'Split window horizontally', silent = true })
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
@@ -185,10 +190,10 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -876,27 +881,51 @@ require('lazy').setup({
     },
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
+  -- { -- You can easily change to a different colorscheme.
+  --   -- Change the name of the colorscheme plugin below, and then
+  --   -- change the command in the config to whatever the name of that colorscheme is.
+  --   --
+  --   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  --   'folke/tokyonight.nvim',
+  --   priority = 1000, -- Make sure to load this before all the other start plugins.
+  --   config = function()
+  --     ---@diagnostic disable-next-line: missing-fields
+  --     require('tokyonight').setup {
+  --       styles = {
+  --         comments = { italic = false }, -- Disable italics in comments
+  --       },
+  --     }
+  --
+  --     -- Load the colorscheme here.
+  --     -- Like many other themes, this one has different styles, and you could load
+  --     -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+  --     vim.cmd.colorscheme 'tokyonight-night'
+  --   end,
+  -- },
+
+  {
+    'sainnhe/gruvbox-material',
+    priority = 1000,
     config = function()
-      ---@diagnostic disable-next-line: missing-fields
-      require('tokyonight').setup {
-        styles = {
-          comments = { italic = false }, -- Disable italics in comments
-        },
+      vim.o.background = 'dark' -- or "light" for light mode
+
+      local cmds = {
+        "let g:gruvbox_material_background = 'hard'",
+        'let g:gruvbox_material_transparent_background = 2',
+        'let g:gruvbox_material_diagnostic_line_highlight = 1',
+        "let g:gruvbox_material_diagnostic_virtual_text = 'colored'",
+        'let g:gruvbox_material_enable_bold = 1',
+        'let g:gruvbox_material_enable_italic = 1',
+        'colorscheme gruvbox-material',
       }
 
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      for _, cmd in ipairs(cmds) do
+        vim.cmd(cmd)
+      end
     end,
   },
+
+  { 'ellisonleao/gruvbox.nvim', priority = 1000, config = true, opts = ... },
 
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
@@ -964,6 +993,157 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
+  { -- Lazygit
+    'kdheepak/lazygit.nvim',
+    lazy = true,
+    cmd = {
+      'LazyGit',
+      'LazyGitConfig',
+      'LazyGitCurrentFile',
+      'LazyGitFilter',
+      'LazyGitFilterCurrentFile',
+    },
+    -- optional for floating window border decoration
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    -- setting the keybinding for LazyGit with 'keys' is recommended in
+    -- order to load the plugin when the command is run for the first time
+    keys = {
+      { '<leader>gg', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
+    },
+  },
+
+  { -- Toggle terminal
+    'akinsho/toggleterm.nvim',
+    version = '*', -- or pin to a specific version
+    config = function()
+      require('toggleterm').setup {
+        -- The size of the terminal window. Can be a number (lines) or a float (percentage)
+        size = 20,
+        -- This is the key mapping to open the terminal
+        open_mapping = [[<leader>tt]],
+
+        -- Keep the terminal open even if the command exits
+        close_on_exit = false,
+
+        -- The direction the terminal opens, 'horizontal' splits the window at the bottom
+        direction = 'horizontal',
+
+        -- Shading to make the terminal window stand out
+        shade_factor = 2,
+        shade_terminals = true,
+
+        -- This function runs when a terminal window is opened
+        on_open = function(term)
+          -- Enter insert mode automatically when the terminal opens
+          vim.cmd 'startinsert!'
+
+          -- Create a keymap *inside* the terminal to close it with the same keys
+          -- The 't' stands for Terminal mode
+          vim.keymap.set('t', '<leader>tt', [[<Cmd>ToggleTerm<CR>]], {
+            noremap = true,
+            silent = true,
+            buffer = term.bufnr,
+          })
+        end,
+      }
+    end,
+  },
+
+  {
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
+      'MunifTanjim/nui.nvim',
+      -- {"3rd/image.nvim", opts = {}}, -- Optional image support in preview window: See `# Preview Mode` for more information
+    },
+    lazy = false, -- neo-tree will lazily load itself
+    ---@module "neo-tree"
+    ---@type neotree.Config?
+    opts = {
+      -- fill any relevant options here
+    },
+    keys = {
+      { '<leader>e', '<cmd>Neotree toggle<cr>', desc = 'Neotree' },
+    },
+  },
+
+  { -- vim-tmux-navigator
+    'christoomey/vim-tmux-navigator',
+    cmd = {
+      'TmuxNavigateLeft',
+      'TmuxNavigateDown',
+      'TmuxNavigateUp',
+      'TmuxNavigateRight',
+      'TmuxNavigatePrevious',
+      'TmuxNavigatorProcessList',
+    },
+    keys = {
+      { '<c-h>', '<cmd><C-U>TmuxNavigateLeft<cr>' },
+      { '<c-j>', '<cmd><C-U>TmuxNavigateDown<cr>' },
+      { '<c-k>', '<cmd><C-U>TmuxNavigateUp<cr>' },
+      { '<c-l>', '<cmd><C-U>TmuxNavigateRight<cr>' },
+      { '<c-\\>', '<cmd><C-U>TmuxNavigatePrevious<cr>' },
+    },
+  },
+
+  -- Bufferline for tabs
+  {
+    'akinsho/bufferline.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' }, -- Recommended for file icons
+    version = '*', -- Or pin to a specific version
+    config = function()
+      -- The configuration will go here in Step 2
+      config = function()
+        require('bufferline').setup {
+          options = {
+            -- Show the buffer number
+            numbers = 'buffer_id', -- Can be "none" | "ordinal" | "buffer_id" | "both"
+
+            -- Enable mouse clicks
+            clickable = true,
+
+            -- Show a close icon for each buffer
+            close_icon = '', -- Requires a Nerd Font
+            buffer_close_icon = ' buffer_close_icon', -- Requires a Nerd Font
+            modified_icon = '●',
+
+            -- Separator style between buffers
+            separator_style = 'thin', -- "thin" | "thick" | "slant" | "padded_slant"
+
+            -- Show diagnostics indicators (errors, warnings, etc.)
+            diagnostics = 'nvim_lsp',
+            diagnostics_indicator = function(count, level, diagnostics_dict, context)
+              local icon = level:match 'error' and ' ' or (level:match 'warning' and ' ' or ' ')
+              return ' ' .. icon .. count
+            end,
+
+            -- Show a bar on the side of the current buffer
+            indicator = {
+              style = 'underline',
+            },
+
+            -- Configure buffer sorting
+            sort_by = 'id', -- 'id' | 'extension' | 'relative_directory' | 'directory' | 'tabs'
+
+            -- Offset the bufferline to allow for a file tree like nvim-tree
+            -- offset = 25, -- Adjust this number to your file tree's width
+          },
+          highlights = {
+            -- You can customize the colors of the bufferline here
+            -- For example:
+            -- background = { bg = '#282a36' },
+            -- buffer_selected = { fg = '#ff79c6', bold = true },
+            -- diagnostics_error = { fg = '#ff5555' }
+          },
+        }
+      end
+    end,
+  },
+
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -973,12 +1153,12 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
